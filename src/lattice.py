@@ -121,7 +121,11 @@ class Lattice(object):
         c.T: numpy.ndarray
             The velocity vectors of the lattice.
         """
-        if self.name == "D2Q9":  # D2Q9
+        if self.name == "D2Q8":  # D2Q8 without rest velocity for elasticity
+            cx = [1, 0, -1, 0, 1, -1, -1, 1]
+            cy = [0, 1, 0, -1, 1, 1, -1, -1]
+            c = np.array(tuple(zip(cx, cy)))
+        elif self.name == "D2Q9":  # D2Q9
             cx = [0, 0, 0, 1, -1, 1, -1, 1, -1]
             cy = [0, 1, -1, 0, 1, -1, 0, 1, -1]
             c = np.array(tuple(zip(cx, cy)))
@@ -133,7 +137,7 @@ class Lattice(object):
             # c = np.array([ci for ci in c if np.linalg.norm(ci) < 1.5])
             c = np.array(c)
         else:
-            raise ValueError("Supported Lattice types are D2Q9, D3Q19 and D3Q27")
+            raise ValueError("Supported Lattice types are D2Q8, D2Q9, D3Q19 and D3Q27")
 
         return c.T
 
@@ -157,7 +161,9 @@ class Lattice(object):
         w = 1.0 / 36.0 * np.ones(self.q)
 
         # Update the weights for 2D and 3D lattices
-        if self.name == "D2Q9":
+        if self.name == "D2Q8":
+            w[np.linalg.norm(c, axis=1) < 1.1] = 1.0 / 9.0
+        elif self.name == "D2Q9":
             w[np.linalg.norm(c, axis=1) < 1.1] = 1.0 / 9.0
             w[0] = 4.0 / 9.0
         elif self.name == "D3Q19":
@@ -206,12 +212,33 @@ class Lattice(object):
     def __str__(self):
         return self.name
 
+class LatticeD2Q8(Lattice):
+    """
+    Lattice class for 2D D2Q8 lattice.
+
+    D2Q8 stands for two-dimensional eight-velocity model. It removes the rest velocity
+    from D2Q9 and is used in the LBM for simulating elasticity in two dimensions.
+
+    Parameters
+    ----------
+    precision: str, optional
+        The precision of the lattice. The default is "f32/f32"
+    """
+    def __init__(self, precision="f32/f32"):
+        super().__init__("D2Q8", precision)
+        self._set_constants()
+
+    def _set_constants(self):
+        self.i_s = jnp.asarray(list(range(8)), dtype=jnp.int8)
+        self.im = 2  # Number of imiddles
+        self.ik = 3  # Number of iknowns or iunknowns
+
 class LatticeD2Q9(Lattice):
     """
     Lattice class for 2D D2Q9 lattice.
 
     D2Q9 stands for two-dimensional nine-velocity model. It is a common model used in the 
-    Lat tice Boltzmann Method for simulating fluid flows in two dimensions.
+    Lattice Boltzmann Method for simulating fluid flows in two dimensions.
 
     Parameters
     ----------
@@ -226,7 +253,7 @@ class LatticeD2Q9(Lattice):
         self.cs = jnp.sqrt(3) / 3.0
         self.cs2 = 1.0 / 3.0
         self.inv_cs2 = 3.0
-        self.i_s = jnp.asarray(list(range(9)))
+        self.i_s = jnp.asarray(list(range(9)), dtype=jnp.int8)
         self.im = 3  # Number of imiddles (includes center)
         self.ik = 3  # Number of iknowns or iunknowns
 

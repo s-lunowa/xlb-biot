@@ -14,6 +14,67 @@ import os
 import __main__
 
 
+class Parameters:
+    def __init__(self, units={}, parameters={}):
+        self._units = {}
+        self._params = {}
+        self.add_units(**units)
+        self.add_parameters(**parameters)
+
+    def set_unit(self, name, value):
+        if not isinstance(value, float) or value <= 0.0:
+            raise TypeError(f"Unit '{name}' must be a positive float.")
+        self._units[name] = value
+
+    def add_units(self, **kwargs):
+        for k,v in kwargs.items():
+            self.set_unit(k, v)
+
+    def set_parameter(self, name, value, unit):
+        if not isinstance(unit, dict):
+            raise TypeError("unit must be a dict.")
+        if not isinstance(value, float):
+            raise TypeError("value must be a float.")
+        for k,v in unit.items():
+            if not k in self._units:
+                raise TypeError(f"unit['{k}'] must exist as base unit.")
+            if not isinstance(v, int):
+                raise TypeError(f"unit['{k}'] must be an int.")
+        self._params[name] = (value, unit)
+
+    def add_parameters(self, **kwargs):
+        for k,v in kwargs.items():
+            self.set_parameter(k, *v)
+
+    def get_unit(self, key):
+        return self._units[key]
+
+    def get(self, key):
+        return self._params[key][0]
+
+    def get_nondimensional(self, key):
+        value, unit = self._params[key]
+        for k,v in unit.items():
+            value /= self._units[k]**v
+        return value
+
+    def print(self, nondimensional=True):
+        print(f"{'Parameter':>20} | {'Unit': ^20} | {'Value'}")
+        print('-' * 60)
+
+        for k,v in self._units.items():
+            print(f"{k:>20} | {'< UNIT >': ^20} | {v}")
+
+        for k, (v,u) in self._params.items():
+            unit = ""
+            for uk,uv in u.items():
+                if nondimensional:
+                    v /= self._units[uk]**uv
+                unit += (" " if len(unit) > 0 else "") + uk + (f"**{uv}" if uv != 1 else "")
+            if len(unit) == 0:
+                unit = "---"
+            print(f"{k:>20} | {unit: ^20} | {v}")
+
 @partial(jit, static_argnums=(1, 2))
 def downsample_field(field, factor, method='bicubic'):
     """

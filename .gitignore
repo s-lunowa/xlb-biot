@@ -150,3 +150,6 @@ dmypy.json
 
 # Checkpoints (default dir for XLB)
 checkpoints/*
+
+# Results
+results/
