@@ -7,9 +7,10 @@ elasticity to accelerate the (elliptic) pseudo-timestepping.
 
 This repository belongs to the following article:
 
-Stephan B. Lunowa and Barbara Wohlmuth (2024),
+Stephan B. Lunowa and Barbara Wohlmuth,
 *A lattice Boltzmann method for Biot's consolidation model of linear poroelasticity*,
-[arXiv:2409.11382](https://arxiv.org/abs/2409.11382)
+Journal of Computational Physics 564 (2026), 115176, [doi: 10.1016/j.jcp.2026.115176](https://doi.org/10.1016/j.jcp.2026.115176).
+Preprint: [arXiv:2409.11382](https://arxiv.org/abs/2409.11382)
 
 
 ## Overview of Changes
